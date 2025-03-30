@@ -1,0 +1,9 @@
+requests
+pandas
+psycopg2
+statsmodels
+tensorflow
+scikit-learn
+flask
+supabase
+python-dotenv

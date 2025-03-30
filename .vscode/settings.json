@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./data_acquisition",
+        "./common",
+        "./src/common"
+    ]
+}
