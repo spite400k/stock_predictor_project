@@ -29,13 +29,25 @@ CREATE TABLE stock_history_pretreatment (
     insert_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- データ登録時間
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- データ更新時間
 );
-CREATE TABLE stock_forecast (
+CREATE TABLE stock_forecast_arima (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- 一意の識別子
     site VARCHAR(20) NOT NULL,                      -- 販売サイト (例: Amazon, Yahoo!)
     seller_site VARCHAR(50) NOT NULL,               -- 販売元サイト
     product_id VARCHAR(50) NOT NULL,                -- 商品ID
-    update_time TIMESTAMP NOT NULL,                 -- 予測の対象日
+    forecast_datetime TIMESTAMP NOT NULL,                 -- 予測の対象日
     forecast FLOAT NOT NULL,                        -- 在庫予測
     created_at TIMESTAMP DEFAULT now(),             -- データ登録時間
-    UNIQUE (site, seller_site, product_id, update_time) -- 各商品の特定日に対して一意制約
+    UNIQUE (site, seller_site, product_id) -- 各商品の特定日に対して一意制約
+);
+
+
+CREATE TABLE stock_forecast_lstm (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- 一意の識別子（UUID）
+    site CHARACTER VARYING(20) NOT NULL,  -- EC サイト名（例: Amazon, Rakuten）
+    seller_site CHARACTER VARYING(50) NOT NULL,  -- 販売者のサイト（例: 特定のショップ名）
+    product_id CHARACTER VARYING(50) NOT NULL,  -- 商品の識別 ID
+    forecast_time TIMESTAMP  NOT NULL,  -- 予測の対象となる日時
+    forecast NUMERIC(10, 2) NOT NULL,  -- LSTM による在庫予測値
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- レコード作成日時（デフォルトで現在時刻）
+    UNIQUE (site, seller_site, product_id) -- 各商品の特定日に対して一意制約
 );

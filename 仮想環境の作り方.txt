@@ -1,13 +1,12 @@
 https://googlechromelabs.github.io/chrome-for-testing/#stable
 
 仮想環境の作成
-python -m venv stock_predictor_project
+python -m venv stock_predictor_project312
 python.exe -m pip install --upgrade pip
 
 Windows の場合、仮想環境を有効化するには：
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-stock_predictor_project\Scripts\activate
+stock_predictor_project312\Scripts\activate
 	
-pip install requests pandas psycopg2 statsmodels tensorflow sklearn flask
-pip list
+pip install requests
 python test.py

@@ -57,11 +57,11 @@ def fetch_stock_data():
 def train_arima_and_forecast(df, site=None, seller_site=None, product_id=None):
     """ ARIMAモデルを学習し、10ステップ先を予測 """
     # 🔹 インデックスを時系列データに修正
-    if 'update_time' in df.columns:
-        df["update_time"] = pd.to_datetime(df["update_time"])
-        df.set_index("update_time", inplace=True)
-    else:
-        raise ValueError("❌ 'update_time' カラムが見つかりません")
+    # if 'update_time' in df.columns:
+    #     df["update_time"] = pd.to_datetime(df["update_time"])
+    #     df.set_index("update_time", inplace=True)
+    # else:
+    #     raise ValueError("❌ 'update_time' カラムが見つかりません")
 
     # 🔹 インデックスの頻度を推定して補完
     inferred_freq = pd.infer_freq(df.index)
@@ -102,12 +102,12 @@ def train_arima_and_forecast(df, site=None, seller_site=None, product_id=None):
 
 
 def save_forecast_to_supabase(forecast_df):
-    """ 予測データを stock_forecast テーブルに保存 """
+    """ 予測データを stock_forecast_arima テーブルに保存 """
     try:
-        # 既存の予測データの確認 (update_time, site, seller_site, product_id の組み合わせ)
+        # 既存の予測データの確認 (forecast_datetime, site, seller_site, product_id の組み合わせ)
         existing_times = {
-            (row["update_time"], row["site"], row["seller_site"], row["product_id"])
-            for row in supabase.table("stock_forecast").select("update_time, site, seller_site, product_id").execute().data
+            (row["forecast_datetime"], row["site"], row["seller_site"], row["product_id"])
+            for row in supabase.table("stock_forecast_arima").select("forecast_datetime, site, seller_site, product_id").execute().data
         }
 
         records = []
@@ -117,7 +117,7 @@ def save_forecast_to_supabase(forecast_df):
                 continue
             records.append({
                 "id": str(uuid.uuid4()),
-                "update_time": row.update_time.isoformat(),
+                "forecast_datetime": row.update_time.isoformat(),
                 "forecast": row.forecast,
                 "site": row.site,
                 "seller_site": row.seller_site,
@@ -125,7 +125,7 @@ def save_forecast_to_supabase(forecast_df):
             })
 
         if records:
-            response = supabase.table("stock_forecast").insert(records).execute()
+            response = supabase.table("stock_forecast_arima").insert(records).execute()
             if "error" in response and response["error"]:
                 print(f"❌ HTTPエラー: {response['error']}")
             else:
