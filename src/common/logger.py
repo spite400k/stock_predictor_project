@@ -6,22 +6,34 @@ from logging.handlers import TimedRotatingFileHandler
 
 # ログディレクトリのパス
 LOG_DIR = r"C:\Users\kazuk\python\stock_predictor_project\logs"
-#LOG_DIR = r"./logs"
 os.makedirs(LOG_DIR, exist_ok=True)  # ディレクトリが存在しない場合は作成
 
 # 各ログファイルのパス
-response_log_file = os.path.join(LOG_DIR, "response_log.txt")
-error_log_file = os.path.join(LOG_DIR, "error_log.txt")
-info_log_file = os.path.join(LOG_DIR, "info_log.txt")
+response_log_file = os.path.join(LOG_DIR, "response_log.log")
+error_log_file = os.path.join(LOG_DIR, "error_log.log")
+info_log_file = os.path.join(LOG_DIR, "info_log.log")
 
 # ロガーの設定
 def setup_logger(name, log_file):
     logger = logging.getLogger(name)
+    
+    # すでにハンドラが設定されている場合は追加しない
+    if logger.hasHandlers():
+        return logger
+    
     logger.setLevel(logging.INFO)
-    handler = TimedRotatingFileHandler(log_file, when="D", interval=1, backupCount=30, encoding="utf-8")  # 30日分保持
+    
+    # 日付ごとにローテーションし、過去30日分保持
+    handler = TimedRotatingFileHandler(
+        log_file, when="midnight", interval=1, backupCount=30, encoding="utf-8"
+    )
+    handler.suffix = "%Y-%m-%d"  # ローテーションしたログに日付を追加
+    handler.extMatch = r"^\d{4}-\d{2}-\d{2}$"  # ローテーション時に適用される日付フォーマット
+    
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    
     return logger
 
 response_logger = setup_logger("response_logger", response_log_file)
@@ -36,21 +48,28 @@ def delete_old_logs():
         if os.path.isfile(log_path) and os.path.getmtime(log_path) < cutoff_time:
             os.remove(log_path)
 
+# 日付が変わったら実行する処理
+last_checked_date = datetime.date.today()
+
+def check_and_cleanup_logs():
+    global last_checked_date
+    today = datetime.date.today()
+    
+    if today > last_checked_date:
+        delete_old_logs()
+        last_checked_date = today
+
 # ログ記録関数
 def log_response(data_type, response):
+    check_and_cleanup_logs()
     response_logger.info(f"[{data_type}] Response: {response}")
-    delete_old_logs()
 
 def log_error(error_message):
+    check_and_cleanup_logs()
     error_logger.error(f"ERROR: {error_message}")
-    delete_old_logs()
-    timestamp = datetime.datetime.now().isoformat()
-    print(f"{timestamp} {error_message}")
+    print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ERROR: {error_message}")
 
 def log_info(info_message):
+    check_and_cleanup_logs()
     info_logger.info(f"INFO: {info_message}")
-    delete_old_logs()
-
-    timestamp = datetime.datetime.now().isoformat()
-    print(f"{timestamp} {info_message}")
-
+    print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} INFO: {info_message}")
