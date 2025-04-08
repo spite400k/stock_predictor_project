@@ -51,3 +51,12 @@ CREATE TABLE stock_forecast_lstm (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- レコード作成日時（デフォルトで現在時刻）
     UNIQUE (site, seller_site, product_id) -- 各商品の特定日に対して一意制約
 );
+
+CREATE TABLE stock_summary (
+  id serial PRIMARY KEY,
+  site character varying(20) NOT NULL,
+  seller_site character varying(50) NOT NULL,
+  product_id character varying(50) NOT NULL,
+  count integer NOT NULL,
+  summary_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);

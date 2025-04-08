@@ -8,5 +8,15 @@ Windows の場合、仮想環境を有効化するには：
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 stock_predictor_project312\Scripts\activate
 	
-pip install requests
+pip install -r requestments.txt
 python test.py
+
+
+
+python -m venv test
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.\test\Scripts\activate         
+pip install -r requirementsTest.txt
+
+
+streamlit run web/app.py 

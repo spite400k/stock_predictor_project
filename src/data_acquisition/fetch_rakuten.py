@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../common")))
-from logger import log_error
+from logger import log_error,log_response
 
 # .env ファイルの読み込み（環境変数の設定）
 load_dotenv()
@@ -32,6 +32,7 @@ def fetch_rakuten_stock():
         if response.status_code == 200:
             data = response.json()
             # print(json.dumps(data, indent=4).encode("utf-8").decode("unicode_escape"))
+            log_response("yahoo_data",data)
             items = extract_items_data(data["Items"])  # 商品データを抽出
             # print(items)
             return items
@@ -54,16 +55,18 @@ def extract_items_data(items):
     for item_wrapper in items:
         item = item_wrapper["Item"]
         extracted_items.append({
-            "product_id": item["itemCode"], # 商品コード
-            "product_name": item["itemName"],   # 商品名
-            "description": item["itemCaption"], # 商品説明
-            "site": "楽天",  # 固定値
-            "seller_site": item["shopName"], # 販売元サイト
-            "stock_status": item["availability"] == 1,  # 1なら在庫あり（True）
-            "price": item["itemPrice"] # 価格
+            "product_id": item["itemCode"],          # 商品コード
+            "product_name": item["itemName"],        # 商品名
+            "description": item["itemCaption"],      # 商品説明
+            "site": "楽天",                           # 固定値
+            "seller_site_id": item["shopCode"],      # 販売元ID
+            "seller_site_name": item["shopName"],    # 販売元名
+            "stock_status": item["availability"] == 1,  # 在庫ステータス
+            "price": item["itemPrice"]               # 価格
         })
 
     return extracted_items
+
 
 
 if __name__ == "__main__":

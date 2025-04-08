@@ -6,7 +6,7 @@ import requests
 from dotenv import load_dotenv
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../common")))
-from logger import log_error
+from logger import log_error,log_response
 
 # .env ファイルの読み込み（環境変数の設定）
 load_dotenv()
@@ -30,6 +30,7 @@ def fetch_yahoo_stock():
         response = requests.get(YAHOO_API_URL, params=params)
         if response.status_code == 200:
             data = response.json()
+            log_response("yahoo_data",data)
             items = extract_items_data(data["high_rating_trend_ranking"]["ranking_data"])  # 商品データを抽出
 
             # 在庫情報を取得して商品のデータを更新
@@ -61,16 +62,17 @@ def extract_items_data(items):
         extracted_items.append({
             "product_id": product_info["code"],  # 商品コード
             "product_name": product_info["name"],  # 商品名
-            "description": product_info.get("description", ""),  # 商品説明
+            "description": product_info.get("description", product_info["name"]),  # 商品説明
             "site": "Yahoo! Shopping",  # 販売サイト
-            "seller_id": item["seller"]["id"],  # 販売元サイトID
-            "seller_site": item["seller"]["name"],  # 販売元サイト
+            "seller_site_id": item["seller"]["id"],  # 販売元ID
+            "seller_site_name": item["seller"]["name"],  # 販売元サイト名
             "price": product_info["regular_price"],  # 価格
             "product_url": product_info["url"],  # 商品URL
             "image_url": item["image"]["medium"]  # 商品画像URL
         })
 
     return extracted_items
+
 
 def fetch_stock_status(item_code):
     """在庫情報を取得するために itemSearch API を使用"""
