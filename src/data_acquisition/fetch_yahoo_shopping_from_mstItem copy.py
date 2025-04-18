@@ -23,16 +23,16 @@ YAHOO_API_URL = os.getenv("YAHOO_API_ITEM_URL")
 YAHOO_APP_ID = os.getenv("YAHOO_APP_ID")
 SITE = "Yahoo! Shopping"  # 固定値
 
-def fetch_stock_summary_rows():
-    """Supabaseのstock_summaryテーブルからyahooの情報を取得"""
+def fetch_mst_site_item_rows():
+    """Supabaseのmst_site_itemテーブルからyahooの情報を取得"""
     try:
-        response = supabase.table("stock_summary") \
+        response = supabase.table("mst_site_item") \
             .select("seller_site_id, seller_site_name, product_id") \
             .eq("site", SITE) \
             .execute()
         return response.data
     except Exception as e:
-        log_error(f"Supabase stock_summary取得失敗: {str(e)}")
+        log_error(f"Supabase mst_site_item取得失敗: {str(e)}")
         return []
 
 def fetch_item_from_yahoo(shop_code, item_code, shop_name):
@@ -87,7 +87,7 @@ def upsert_product_to_supabase(product_data):
         product_id = product_data["product_id"]
 
         # レコードの存在確認
-        existing = supabase.table("product_info") \
+        existing = supabase.table("trn_tracked_item_stock") \
             .select("id") \
             .eq("site", site) \
             .eq("seller_site_id", seller_site_id) \
@@ -99,13 +99,13 @@ def upsert_product_to_supabase(product_data):
             # UPDATE処理
             record_id = existing.data[0]["id"]
             product_data["updated_at"] = "now()"  # 更新時間（PostgreSQLのnow()）
-            supabase.table("product_info") \
+            supabase.table("trn_tracked_item_stock") \
                 .update(product_data) \
                 .eq("id", record_id) \
                 .execute()
         else:
             # INSERT処理
-            supabase.table("product_info").insert(product_data).execute()
+            supabase.table("trn_tracked_item_stock").insert(product_data).execute()
 
     except Exception as e:
         log_error(f"Supabase INSERT/UPDATE 失敗: {str(e)}")
@@ -113,7 +113,7 @@ def upsert_product_to_supabase(product_data):
 
 def main_yahoo():
     print("🔍 Supabaseから検索条件を取得中...")
-    rows = fetch_stock_summary_rows()
+    rows = fetch_mst_site_item_rows()
 
     if not rows:
         print("⚠️ データが見つかりません。処理を終了します。")

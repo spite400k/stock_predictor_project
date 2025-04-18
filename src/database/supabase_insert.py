@@ -1,16 +1,3 @@
-import datetime
-import os
-from supabase import create_client, Client
-from dotenv import load_dotenv
-
-# .env ファイルの読み込み
-load_dotenv()
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # Supabaseに在庫データを登録
 def update_stock_in_supabase(
     product_id,
@@ -20,7 +7,8 @@ def update_stock_in_supabase(
     description="",
     seller_site_id="",
     seller_site_name="",
-    price=0
+    price=0,
+    jan_code=None  # 🆕 追加
 ):
     timestamp = datetime.datetime.now().isoformat()
 
@@ -35,14 +23,15 @@ def update_stock_in_supabase(
         "price": price,
         "insert_time": timestamp,
         "update_time": timestamp,
+        "jan_code": jan_code,  # 🆕 追加
     }
 
-    response = supabase.table("stock_history").insert(data).execute()
+    response = supabase.table("trn_ranked_item_stock").insert(data).execute()
 
     if response.data:
         return data
     else:
-        print(f"❌ エラー: {response.status_code}, {response.text}")
+        print(f"❌ エラー trn_ranked_item_stock: {response.status_code}, {response.text}")
         return None
 
 
@@ -59,6 +48,7 @@ def insert_stock_data(data_list):
                 seller_site_id=d.get("seller_site_id", ""),
                 seller_site_name=d.get("seller_site_name", ""),
                 price=d.get("price", 0),
+                jan_code=d.get("jan_code")  # 🆕 追加
             )
 
 
@@ -73,6 +63,7 @@ if __name__ == "__main__":
         "seller_site_id": "amz",
         "seller_site_name": "Amazon JP",
         "price": 20000,
+        "jan_code": "4905524664509"  # 🆕 追加
     }
 
     rakuten_data = {
@@ -84,6 +75,7 @@ if __name__ == "__main__":
         "seller_site_id": "rak",
         "seller_site_name": "Rakuten Store",
         "price": 30000,
+        "jan_code": "4948872414033"  # 🆕 追加
     }
 
     yahoo_data = {
@@ -95,6 +87,7 @@ if __name__ == "__main__":
         "seller_site_id": "yah",
         "seller_site_name": "Yahoo Shopping",
         "price": 50000,
+        "jan_code": "4948872415207"  # 🆕 追加
     }
 
     data_sources = [amazon_data, rakuten_data, yahoo_data]

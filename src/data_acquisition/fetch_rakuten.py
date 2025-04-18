@@ -1,3 +1,13 @@
+"""
+スクリプト名: rakuten_ranking_fetcher.py
+
+目的:
+楽天API（ジャンル別商品ランキングAPI）を利用して、楽天市場の人気商品情報を取得し、
+商品コード、商品名、販売店情報、価格、在庫状況などの必要な項目を抽出・整形する。
+抽出した情報は後続処理（ログ出力やDB登録など）に利用可能な形式で返す。
+"""
+
+
 import json
 import os
 import sys
@@ -32,7 +42,7 @@ def fetch_rakuten_stock():
         if response.status_code == 200:
             data = response.json()
             # print(json.dumps(data, indent=4).encode("utf-8").decode("unicode_escape"))
-            log_response("yahoo_data",data)
+            log_response("rakuten",data)
             items = extract_items_data(data["Items"])  # 商品データを抽出
             # print(items)
             return items
@@ -62,7 +72,8 @@ def extract_items_data(items):
             "seller_site_id": item["shopCode"],      # 販売元ID
             "seller_site_name": item["shopName"],    # 販売元名
             "stock_status": item["availability"] == 1,  # 在庫ステータス
-            "price": item["itemPrice"]               # 価格
+            "price": item["itemPrice"],               # 価格
+            "jan_code": item.get("jan", None)       # JANコード（存在しない場合はNoneを設定）
         })
 
     return extracted_items

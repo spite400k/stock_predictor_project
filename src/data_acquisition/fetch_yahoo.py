@@ -1,3 +1,17 @@
+"""
+スクリプト名: yahoo_ranking_stock_fetcher.py
+
+目的:
+Yahoo!ショッピングの「高評価トレンドランキングAPI」を利用して注目商品情報を取得し、
+さらに itemSearch API を活用して各商品の在庫状況（inStock）を取得・統合。
+最終的に商品名、価格、URL、画像URL、在庫ステータスなどの情報を持った商品データを作成する。
+
+用途:
+Yahoo!ショッピング上で人気商品かつ在庫があるアイテムを効率よく把握し、
+販売戦略やマーケティング施策に活用するためのデータ収集・分析ベースを構築する。
+"""
+
+
 import json
 import os
 import sys
@@ -58,17 +72,18 @@ def extract_items_data(items):
     """JSON内のItemデータから必要な情報を抽出する"""
     extracted_items = []
     for item in items:
-        product_info = item["item_information"]
+        trn_tracked_item_stock = item["item_information"]
         extracted_items.append({
-            "product_id": product_info["code"],  # 商品コード
-            "product_name": product_info["name"],  # 商品名
-            "description": product_info.get("description", product_info["name"]),  # 商品説明
+            "product_id": trn_tracked_item_stock["code"],  # 商品コード
+            "product_name": trn_tracked_item_stock["name"],  # 商品名
+            "description": trn_tracked_item_stock.get("description", trn_tracked_item_stock["name"]),  # 商品説明
             "site": "Yahoo! Shopping",  # 販売サイト
             "seller_site_id": item["seller"]["id"],  # 販売元ID
             "seller_site_name": item["seller"]["name"],  # 販売元サイト名
-            "price": product_info["regular_price"],  # 価格
-            "product_url": product_info["url"],  # 商品URL
-            "image_url": item["image"]["medium"]  # 商品画像URL
+            "price": trn_tracked_item_stock["regular_price"],  # 価格
+            "product_url": trn_tracked_item_stock["url"],  # 商品URL
+            "image_url": item["image"]["medium"],  # 商品画像URL
+            "jan_code": trn_tracked_item_stock.get("jan_code", None)  # JANコード（あれば取得）
         })
 
     return extracted_items

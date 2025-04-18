@@ -1,4 +1,4 @@
-CREATE TABLE stock_history (
+CREATE TABLE trn_ranked_item_stock (
     id SERIAL PRIMARY KEY,
     product_id VARCHAR(50),
     product_name VARCHAR(255),
@@ -12,7 +12,7 @@ CREATE TABLE stock_history (
 );
 
 
-CREATE TABLE stock_history_pretreatment (
+CREATE TABLE trn_ranked_item_stock_pretreatment (
     id SERIAL PRIMARY KEY,            -- 一意の識別子
     product_id VARCHAR(50) NOT NULL,  -- 商品ID
     product_name VARCHAR(255),        -- 商品名
@@ -52,7 +52,7 @@ CREATE TABLE stock_forecast_lstm (
     UNIQUE (site, seller_site, product_id) -- 各商品の特定日に対して一意制約
 );
 
-CREATE TABLE stock_summary (
+CREATE TABLE mst_site_item (
   id serial PRIMARY KEY,
   site character varying(20) NOT NULL,
   seller_site character varying(50) NOT NULL,

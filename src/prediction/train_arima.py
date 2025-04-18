@@ -16,9 +16,9 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 def fetch_stock_data():
-    """ stock_history_pretreatment からデータ取得 """
+    """ trn_ranked_item_stock_pretreatment からデータ取得 """
     try:
-        response = supabase.table("stock_history_pretreatment").select("*").execute()
+        response = supabase.table("trn_ranked_item_stock_pretreatment").select("*").execute()
 
         if "error" in response and response["error"]:
             print(f"❌ HTTPエラー: {response['error']}")

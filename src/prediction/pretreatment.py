@@ -69,7 +69,7 @@ def fetch_stock_data():
 
     try:
         while True:
-            response = supabase.table("stock_history").select("*").range(offset, offset + batch_size - 1).execute()
+            response = supabase.table("trn_ranked_item_stock").select("*").range(offset, offset + batch_size - 1).execute()
             if not response.data:
                 break  # データがなければ終了
             
@@ -88,7 +88,7 @@ def fetch_stock_data():
 
 def insert_stock_data(df):
     """
-    DataFrame のデータを Supabase の `stock_history_pretreatment` テーブルに挿入する。
+    DataFrame のデータを Supabase の `trn_ranked_item_stock_pretreatment` テーブルに挿入する。
     """
     batch_size = 1000  # 1回の挿入件数
 
@@ -105,7 +105,7 @@ def insert_stock_data(df):
     # 1000件ずつバッチ処理
     for i in range(0, len(records), batch_size):
         batch = records[i:i + batch_size]
-        response = supabase.table("stock_history_pretreatment").upsert(batch).execute()
+        response = supabase.table("trn_ranked_item_stock_pretreatment").upsert(batch).execute()
 
         if "data" in response and response.data:
             log_info(f"✅ {len(batch)} 件のデータ挿入が完了しました。")

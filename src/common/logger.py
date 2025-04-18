@@ -9,7 +9,8 @@ LOG_DIR = r"C:\Users\kazuk\python\stock_predictor_project\logs"
 os.makedirs(LOG_DIR, exist_ok=True)  # ディレクトリが存在しない場合は作成
 
 # 各ログファイルのパス
-response_log_file = os.path.join(LOG_DIR, "response_log.log")
+rakuten_response_log_file = os.path.join(LOG_DIR, "response_rakuten_log.log")
+yahoo_response_log_file = os.path.join(LOG_DIR, "response_yahoo_log.log")
 error_log_file = os.path.join(LOG_DIR, "error_log.log")
 info_log_file = os.path.join(LOG_DIR, "info_log.log")
 
@@ -36,7 +37,8 @@ def setup_logger(name, log_file):
     
     return logger
 
-response_logger = setup_logger("response_logger", response_log_file)
+rakuten_response_logger = setup_logger("rakuten_response_logger", rakuten_response_log_file)
+yahoo_response_logger = setup_logger("yahoo_response_logger", yahoo_response_log_file)
 error_logger = setup_logger("error_logger", error_log_file)
 info_logger = setup_logger("info_logger", info_log_file)
 
@@ -62,7 +64,14 @@ def check_and_cleanup_logs():
 # ログ記録関数
 def log_response(data_type, response):
     check_and_cleanup_logs()
-    response_logger.info(f"[{data_type}] Response: {response}")
+
+    if data_type.lower() == "rakuten":
+        rakuten_response_logger.info(f"[{data_type}] Response: {response}")
+    elif data_type.lower() == "yahoo_data":
+        yahoo_response_logger.info(f"[{data_type}] Response: {response}")
+    else:
+        # どちらにも該当しない場合は、info_logに記録
+        info_logger.info(f"[{data_type}] Response: {response}")
 
 def log_error(error_message):
     check_and_cleanup_logs()

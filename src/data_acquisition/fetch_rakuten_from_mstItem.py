@@ -1,3 +1,14 @@
+"""
+スクリプト名: rakuten_item_sync.py
+
+目的:
+Supabase上の「mst_site_item」テーブルから楽天商品コードを取得し、楽天APIを用いて商品情報を取得・整形。
+その後、商品情報をSupabaseの「trn_tracked_item_stock」テーブルにアップサート（追加または更新）する。
+主に在庫状況・価格などの追跡に利用するデータの最新化を目的とする。
+"""
+
+
+import datetime
 import json
 import os
 import sys
@@ -23,16 +34,16 @@ RAKUTEN_API_URL = os.getenv("RAKUTEN_API_URL")
 RAKUTEN_APP_ID = os.getenv("RAKUTEN_APP_ID")
 SITE = "楽天"  # 固定値
 
-def fetch_stock_summary_rows():
-    """Supabaseのstock_summaryテーブルから楽天の情報を取得"""
+def fetch_mst_site_item_rows():
+    """Supabaseのmst_site_itemテーブルから楽天の情報を取得"""
     try:
-        response = supabase.table("stock_summary") \
+        response = supabase.table("mst_site_item") \
             .select("seller_site_id, seller_site_name, product_id") \
             .eq("site", SITE) \
             .execute()
         return response.data
     except Exception as e:
-        log_error(f"Supabase stock_summary取得失敗: {str(e)}")
+        log_error(f"Supabase mst_site_item取得失敗: {str(e)}")
         return []
 
 
@@ -80,7 +91,7 @@ def upsert_product_to_supabase(product_data):
         product_id = product_data["product_id"]
 
         # 既存レコードを確認
-        existing = supabase.table("product_info") \
+        existing = supabase.table("trn_tracked_item_stock") \
             .select("id") \
             .eq("site", site) \
             .eq("seller_site_id", seller_site_id) \
@@ -89,22 +100,22 @@ def upsert_product_to_supabase(product_data):
             .execute()
 
         if existing.data:
-            product_info_id = existing.data[0]["id"]
-            product_data["updated_at"] = "now()"
+            trn_tracked_item_stock_id = existing.data[0]["id"]
+            product_data["updated_at"] = datetime.datetime.now().isoformat()
 
-            supabase.table("product_info") \
+            supabase.table("trn_tracked_item_stock") \
                 .update(product_data) \
-                .eq("id", product_info_id) \
+                .eq("id", trn_tracked_item_stock_id) \
                 .execute()
         else:
-            supabase.table("product_info").insert(product_data).execute()
+            supabase.table("trn_tracked_item_stock").insert(product_data).execute()
 
     except Exception as e:
-        log_error(f"Supabase upsert失敗: {str(e)}")
+        log_error(f"Supabase trn_tracked_item_stock upsert失敗: {str(e)}")
 
 def main_rakuten():
     print("🔍 Supabaseから検索条件を取得中...")
-    rows = fetch_stock_summary_rows()
+    rows = fetch_mst_site_item_rows()
 
     if not rows:
         print("⚠️ データが見つかりません。処理を終了します。")
@@ -117,8 +128,9 @@ def main_rakuten():
         item_data = fetch_item_from_rakuten(shop_code, item_code)
 
         if item_data:
-            # seller_site_nameがstock_summaryに含まれている場合は補完
+            # seller_site_nameがmst_site_itemに含まれている場合は補完
             item_data["seller_site_name"] = row.get("seller_site_name", item_data.get("seller_site_name", ""))
+            # item_data["seller_site_id"] = item_data.get("seller_site_id", "") or ""
             upsert_product_to_supabase(item_data)
             print(f"✅ 登録完了: {item_data['product_id']}")
         else:

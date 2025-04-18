@@ -21,7 +21,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def fetch_stock_data():
     """Supabase から在庫データを取得"""
     try:
-        response = supabase.table("stock_history_pretreatment").select("update_time, site, seller_site, product_id, stock_status").execute()
+        response = supabase.table("trn_ranked_item_stock_pretreatment").select("update_time, site, seller_site, product_id, stock_status").execute()
         if "error" in response and response["error"]:
             print(f"❌ HTTPエラー: {response['error']}")
             return None

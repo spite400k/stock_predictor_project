@@ -18,7 +18,7 @@ offset = 0
 all_rows = []
 
 while True:
-    response = supabase.table("stock_history").select("*").range(offset, offset + batch_size - 1).execute()
+    response = supabase.table("trn_ranked_item_stock").select("*").range(offset, offset + batch_size - 1).execute()
     if not response.data:
         break
     all_rows.extend(response.data)
@@ -41,7 +41,7 @@ for row in all_rows:
     )
     summary_dict[key] += 1
 
-# 結果を stock_summary に upsert
+# 結果を mst_site_item に upsert
 for (site, seller_site_id, seller_site_name, product_id), count in summary_dict.items():
     insert_data = {
         "site": site,
@@ -52,8 +52,8 @@ for (site, seller_site_id, seller_site_name, product_id), count in summary_dict.
         "summary_time": datetime.utcnow().isoformat()
     }
 
-    res = supabase.table("stock_summary").upsert(insert_data).execute()
+    res = supabase.table("mst_site_item").upsert(insert_data).execute()
     if not res.data:
         print(f"⚠️ INSERT失敗: {insert_data}")
 
-print("✅ 完了！stock_summary に集計結果を保存しました。")
+print("✅ 完了！mst_site_item に集計結果を保存しました。")

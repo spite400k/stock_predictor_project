@@ -5,7 +5,7 @@ def save_to_db(product_id, product_name, site, stock_status, price):
     cursor = conn.cursor()
     
     query = """
-    INSERT INTO stock_history (product_id, product_name, site, stock_status, price)
+    INSERT INTO trn_ranked_item_stock (product_id, product_name, site, stock_status, price)
     VALUES (%s, %s, %s, %s, %s);
     """
     cursor.execute(query, (product_id, product_name, site, stock_status, price))
