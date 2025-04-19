@@ -1,3 +1,29 @@
+"""
+スクリプト名: supabase_ranked_stock_updater.py
+
+目的:
+外部ソース（Amazon、楽天、Yahoo!など）から収集した商品データを、
+Supabaseの「trn_ranked_item_stock」テーブルに対して個別または一括で登録（INSERT）する。
+
+用途:
+ランキングや在庫調査などで取得した商品情報を一元的にデータベースに保存し、
+在庫管理、販売傾向の可視化、ダッシュボード構築などに活用する基盤を提供する。
+"""
+
+import datetime
+import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# .env ファイルの読み込み
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Supabaseに在庫データを登録
 # Supabaseに在庫データを登録
 def update_stock_in_supabase(
     product_id,

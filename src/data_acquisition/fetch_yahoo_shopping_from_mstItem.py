@@ -41,6 +41,8 @@ def fetch_mst_site_item_rows():
         response = supabase.table("mst_site_item") \
             .select("seller_site_id, seller_site_name, product_id, jan_code") \
             .eq("site", SITE) \
+            .neq("seller_site_id", None) \
+            .neq("seller_site_id", '') \
             .execute()
         return response.data
     except Exception as e:
@@ -64,15 +66,23 @@ def fetch_item_from_yahoo(shop_code, item_code, shop_name, jan_code=None):
 
     # APIリクエストのパラメータ設定
     # item_codeがある場合はitem_codeを、ない場合はjan_codeを使用
-    params = {
-        "appid": YAHOO_APP_ID,
-        "query": query_value,
-        "hits": 1,
-    }
-    # shopcodeがある場合はshopcodeを追加
-    if shop_code:
-        params["shopcode"] = shop_code
-
+    if jan_code:
+        params = {
+            "appid": YAHOO_APP_ID,
+            "jan_code": jan_code,
+            "hits": 1,
+        }
+    else:
+        params = {
+            "appid": YAHOO_APP_ID,
+            "query": item_code,
+            "hits": 1,
+        }
+        # shopcodeがある場合はshopcodeを追加
+        if shop_code:
+            params["seller_id"] = shop_code
+        else:
+            return None
     try:
         print(f"📡 Yahoo APIリクエスト: {YAHOO_API_URL}?query={params['query']}")
         response = requests.get(YAHOO_API_URL, params=params)
@@ -82,26 +92,26 @@ def fetch_item_from_yahoo(shop_code, item_code, shop_name, jan_code=None):
             return None
 
         data = response.json()
-        resultset = data.get("ResultSet", {})
-        result_data = resultset.get("0", {})
+        resultset = data.get("hits", {})
+        result_data = resultset[0] if resultset else None
 
         # 結果がなければスキップ
-        if "Result" not in result_data or not result_data["Result"]:
+        if not result_data:
             log_error(f"商品データが見つかりません: item_code={full_item_code},jan_code={jan_code}")
             return None
 
-        item = result_data["Result"]["Item"]
+        item = result_data
 
         return {
-            "product_id": item.get("itemcode"),
-            "product_name": item.get("itemname"),
+            "product_id": item.get("code"),
+            "product_name": item.get("name"),
             "description": item.get("description"),
             "site": SITE,
             "seller_site_id": shop_code,
             "seller_site_name": shop_name,  # 追加: seller_site_nameを渡す
-            "stock_status": item.get("availability") == 1,
+            "stock_status": item.get("inStock") ,
             "price": item.get("price"),
-            "jan_code": jan_code
+            "jan_code": item.get("janCode")
         }
 
     except Exception as e:
@@ -166,7 +176,7 @@ def main_yahoo():
         else:
             print(f"❌ スキップ: {shop_code}:{item_code or 'JAN:' + jan_code}")
 
-        time.sleep(1)# 1秒待機（API制限対策）
+        time.sleep(2)# 1秒待機（API制限対策）
 
 
     print("🎉 全商品処理完了")

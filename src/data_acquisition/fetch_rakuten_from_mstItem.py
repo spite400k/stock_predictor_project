@@ -38,7 +38,7 @@ def fetch_mst_site_item_rows():
     """Supabaseのmst_site_itemテーブルから楽天の情報を取得"""
     try:
         response = supabase.table("mst_site_item") \
-            .select("seller_site_id, seller_site_name, product_id") \
+            .select("seller_site_id, seller_site_name, product_id, jan_code") \
             .eq("site", SITE) \
             .execute()
         return response.data

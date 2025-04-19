@@ -13,11 +13,11 @@ from data_acquisition.fetch_yahoo_shopping_from_mstItem import main_yahoo
 
 # while True:
 # amazon_data = fetch_amazon_stock()
-amazon_data = [{"product_name": "PS5", "site": "Amazon", "stock_status": True}]
-# レスポンスをログファイルに保存
-log_response("amazon_data",amazon_data)
-#insert_stock_data(amazon_data)
-log_info(f" 📦 amazon在庫データ更新完了")
+# amazon_data = [{"product_name": "PS5", "site": "Amazon", "stock_status": True}]
+# # レスポンスをログファイルに保存
+# log_response("amazon_data",amazon_data)
+# #insert_stock_data(amazon_data)
+# log_info(f" 📦 amazon在庫データ更新完了")
 
 rakuten_data = fetch_rakuten_stock()
 # レスポンスをログファイルに保存
