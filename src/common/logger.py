@@ -4,9 +4,13 @@ import os
 import time
 from logging.handlers import TimedRotatingFileHandler
 
-# ログディレクトリのパス
-LOG_DIR = r"C:\Users\kazuk\python\stock_predictor_project\logs"
+# # ログディレクトリのパス
+# LOG_DIR = r"C:\Users\kazuk\python\stock_predictor_project\logs"
+# os.makedirs(LOG_DIR, exist_ok=True)  # ディレクトリが存在しない場合は作成
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)  # ディレクトリが存在しない場合は作成
+
 
 # 各ログファイルのパス
 rakuten_response_log_file = os.path.join(LOG_DIR, "response_rakuten_log.log")

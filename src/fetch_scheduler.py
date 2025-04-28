@@ -1,12 +1,10 @@
-import datetime
-import time
-
 from common.logger import log_info, log_response  # インポート
 
 from database.supabase_insert import insert_stock_data
 # from data_acquisition.fetch_amazon import fetch_amazon_stock
 from data_acquisition.fetch_rakuten import fetch_rakuten_stock
 from data_acquisition.fetch_yahoo import fetch_yahoo_stock
+from data_acquisition.summary_item import aggregate_and_upsert_site_item
 
 from data_acquisition.fetch_rakuten_from_mstItem import main_rakuten
 from data_acquisition.fetch_yahoo_shopping_from_mstItem import main_yahoo
@@ -30,6 +28,12 @@ yahoo_data = fetch_yahoo_stock()
 # log_response("yahoo_data",yahoo_data)
 insert_stock_data(yahoo_data)
 log_info(f" 📦 yahoo在庫データ更新完了")
+
+
+# ランキングに上がった商品を集計してmst_site_itemにupsertする
+aggregate_and_upsert_site_item()
+log_info(f" 📦 mst_site_item更新完了")
+
 
 main_rakuten()
 log_info(f" 📦 rakuten 過去にランキングに上がった商品ごとの在庫データ更新完了")

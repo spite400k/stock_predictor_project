@@ -1,9 +1,11 @@
+from datetime import datetime
+import math
+import json
 import os
 import sys
-import pandas as pd
-from supabase import create_client, Client
 from dotenv import load_dotenv
-
+import pandas as pd
+from supabase import create_client, Client  # supabase-py使ってる前提
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../common")))
 from logger import log_info
 
@@ -13,9 +15,95 @@ load_dotenv()
 # Supabase の接続情報
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-# Supabase クライアントの作成
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# ISO8601形式に揃える関数
+def to_isoformat(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, str):
+        try:
+            # すでにISOならそのまま
+            dt = datetime.fromisoformat(value)
+            return dt.isoformat()
+        except ValueError:
+            return value
+    return value
+
+# レコード1件をクリーン化する関数
+def clean_record(record):
+    # NaTや空文字列をNoneにする
+    for key in ["stockout_time", "restock_time"]:
+        if str(record.get(key)) in ["NaT", "nat", "NaN", "", None]:
+            record[key] = None
+
+    # prev_stock_statusを整数化（またはNone）
+    if "prev_stock_status" in record:
+        if record["prev_stock_status"] in ["", None, math.nan]:
+            record["prev_stock_status"] = None
+        elif isinstance(record["prev_stock_status"], float) and not math.isnan(record["prev_stock_status"]):
+            record["prev_stock_status"] = int(record["prev_stock_status"])
+
+    # 日付系をISO8601に統一
+    for key in ["insert_time", "update_time", "stockout_time", "restock_time"]:
+        if record.get(key):
+            record[key] = to_isoformat(record[key])
+
+    return record
+
+
+# バッチで一括登録する関数
+def insert_stock_data(df):
+    batch_size = 500  # バッチサイズはSupabaseの制限に合わせる
+    records = df.to_dict(orient="records")
+
+    log_info(f"★送信予定データ件数: {len(records)}件")
+
+    for i in range(0, len(records), batch_size):
+        batch = records[i:i+batch_size]
+        batch = [clean_record(r) for r in batch]
+
+        # バッチの最初と最後をダンプして確認
+        log_info("★送信する1件目のデータ:")
+        log_info(json.dumps(batch[0], indent=2, ensure_ascii=False, default=str))
+
+        try:
+            response = supabase.table("trn_ranked_item_stock_pretreatment").upsert(batch).execute()
+            log_info(f"✅ バッチ {i//batch_size+1}: 登録成功！")
+        except Exception as e:
+            log_info(f"❌ バッチ {i//batch_size+1}: 登録失敗")
+            log_info(f"エラー内容: {e}")
+            # エラー原因をちゃんと見るため、詳細表示
+            if hasattr(e, 'args') and e.args:
+                log_info(f"エラー内容: {e.args}")
+                print("エラー詳細:", e.args)
+
+def fetch_stock_data():
+    """
+    Supabase から在庫データを取得し、リストとして返す。
+    """
+    batch_size = 1000  # 1回の取得件数
+    offset = 0
+    all_records = []
+
+    try:
+        while True:
+            response = supabase.table("trn_ranked_item_stock").select("*").range(offset, offset + batch_size - 1).execute()
+            if not response.data:
+                break  # データがなければ終了
+            
+            all_records.extend(response.data)
+            offset += batch_size  # 次の範囲へ
+
+        if all_records:
+            return all_records
+        else:
+            log_info("⚠ データが取得できませんでした。")
+            return []
+
+    except Exception as e:
+        log_info(f"❌ データ取得中にエラー発生: {e}")
+        return []
 
 def pretreatment():
     """
@@ -59,58 +147,6 @@ def pretreatment():
     else:
         log_info("データ取得に失敗しました。")
 
-def fetch_stock_data():
-    """
-    Supabase から在庫データを取得し、リストとして返す。
-    """
-    batch_size = 1000  # 1回の取得件数
-    offset = 0
-    all_records = []
-
-    try:
-        while True:
-            response = supabase.table("trn_ranked_item_stock").select("*").range(offset, offset + batch_size - 1).execute()
-            if not response.data:
-                break  # データがなければ終了
-            
-            all_records.extend(response.data)
-            offset += batch_size  # 次の範囲へ
-
-        if all_records:
-            return all_records
-        else:
-            log_info("⚠ データが取得できませんでした。")
-            return []
-
-    except Exception as e:
-        log_info(f"❌ データ取得中にエラー発生: {e}")
-        return []
-
-def insert_stock_data(df):
-    """
-    DataFrame のデータを Supabase の `trn_ranked_item_stock_pretreatment` テーブルに挿入する。
-    """
-    batch_size = 1000  # 1回の挿入件数
-
-    # 日付データを文字列に変換（Supabase の JSON 形式に対応）
-    df["prev_stock_status"] = df["prev_stock_status"].fillna(0)
-    df["insert_time"] = df["insert_time"].astype(str)
-    df["update_time"] = df["update_time"].astype(str)
-    df["stockout_time"] = df["stockout_time"].astype(str).where(df['stockout_time'].notna(), None)
-    df["restock_time"] = df["restock_time"].astype(str).where(df['restock_time'].notna(), None)
-
-    # DataFrame を辞書のリストに変換
-    records = df.to_dict(orient="records")
-
-    # 1000件ずつバッチ処理
-    for i in range(0, len(records), batch_size):
-        batch = records[i:i + batch_size]
-        response = supabase.table("trn_ranked_item_stock_pretreatment").upsert(batch).execute()
-
-        if "data" in response and response.data:
-            log_info(f"✅ {len(batch)} 件のデータ挿入が完了しました。")
-        else:
-            log_info(f"❌ データ挿入エラー: {response}")
 
 # 実行テスト
 if __name__ == "__main__":
