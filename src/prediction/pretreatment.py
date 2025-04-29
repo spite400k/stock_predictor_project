@@ -13,8 +13,11 @@ from logger import log_info
 load_dotenv()
 
 # Supabase の接続情報
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# SUPABASE_URL = os.getenv("SUPABASE_URL")
+# SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://aaueetvhrbyqswejvmlc.supabase.co"
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWVldHZocmJ5cXN3ZWp2bWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI0ODExMTMsImV4cCI6MjA1ODA1NzExM30.4F5lyIxl5vl5G2V3b6tJI_3lNU3ApN2_i-D-DSsef5w"
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ISO8601形式に揃える関数
@@ -40,9 +43,13 @@ def clean_record(record):
     # prev_stock_statusを整数化（またはNone）
     if "prev_stock_status" in record:
         if record["prev_stock_status"] in ["", None, math.nan]:
-            record["prev_stock_status"] = None
+            record["prev_stock_status"] = 1
         elif isinstance(record["prev_stock_status"], float) and not math.isnan(record["prev_stock_status"]):
-            record["prev_stock_status"] = int(record["prev_stock_status"])
+            if pd.isna(record['prev_stock_status']):
+                record['prev_stock_status'] = 1
+            else:
+                record["prev_stock_status"] = int(record["prev_stock_status"])
+
 
     # 日付系をISO8601に統一
     for key in ["insert_time", "update_time", "stockout_time", "restock_time"]:
