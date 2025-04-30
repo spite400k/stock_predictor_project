@@ -10008,3 +10008,5 @@ test/Lib/site-packages/plotly-6.0.1.dist-info/RECORD
 test/Lib/site-packages/plotly-6.0.1.dist-info/REQUESTED
 test/Lib/site-packages/plotly-6.0.1.dist-info/top_level.txt
 test/Lib/site-packages/plotly-6.0.1.dist-info/WHEEL
+src/database/__pycache__/*.pyc
+src/common/logs/*.log
