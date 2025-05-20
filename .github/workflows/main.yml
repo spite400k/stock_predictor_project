@@ -2,7 +2,7 @@ name: Run Supabase Script Every Hour
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 毎時0分に実行
+    - cron: '20 * * * *'  # 毎時0分に実行
   workflow_dispatch:     # 手動実行も可能にする
 
 jobs:
@@ -25,13 +25,22 @@ jobs:
 
       - name: Run the Python script
         env:
+          RAKUTEN_API_URL: ${{ vars.RAKUTEN_API_URL }}
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          YAHOO_API_URL: ${{ vars.YAHOO_API_URL }}
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+          YAHOO_API_ITEM_URL: ${{ vars.YAHOO_API_ITEM_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           ENV: ${{ vars.ENV }}
+          
         run: |
           # 環境変数を確認
+          echo "RAKUTEN_API_URL: $RAKUTEN_API_URL"
           echo "RAKUTEN_APP_ID: $RAKUTEN_APP_ID"
+          echo "YAHOO_API_URL: $YAHOO_API_URL"
+          echo "RAKUTEN_APP_ID: $RAKUTEN_APP_ID"
+          echo "YAHOO_API_ITEM_URL: $YAHOO_API_ITEM_URL"
           echo "SUPABASE_URL: $SUPABASE_URL"
           echo "SUPABASE_KEY: $SUPABASE_KEY"
           echo "ENV: $ENV"
