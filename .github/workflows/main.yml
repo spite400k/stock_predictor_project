@@ -46,4 +46,4 @@ jobs:
           echo "ENV: $ENV"
           # Pythonスクリプトを実行
           python src/fetch_scheduler.py
-          python src/prediction_scheduler.py
+          # python src/prediction_scheduler.py
