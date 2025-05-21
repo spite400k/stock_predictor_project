@@ -45,5 +45,5 @@ jobs:
           echo "SUPABASE_KEY: $SUPABASE_KEY"
           echo "ENV: $ENV"
           # Pythonスクリプトを実行
-          python fetch_scheduler.py
-          python prediction_scheduler.py
+          python src/fetch_scheduler.py
+          python src/prediction_scheduler.py
