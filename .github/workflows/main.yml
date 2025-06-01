@@ -1,8 +1,8 @@
 name: Run Supabase Script Every Hour
 
 on:
-  schedule:
-    - cron: '20 * * * *'  # 毎時0分に実行
+#  schedule:
+#    - cron: '20 * * * *'  # 毎時0分に実行
   workflow_dispatch:     # 手動実行も可能にする
 
 jobs:
